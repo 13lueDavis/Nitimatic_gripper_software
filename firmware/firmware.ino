@@ -1,6 +1,5 @@
 import board
 import busio
- 
 import adafruit_mcp4725
 
 // PSEU: Imports
@@ -16,7 +15,11 @@ i2c = busio.I2C(board.SCL, board.SDA)
 
 // set it up as an outcome function
 dac = adafruit_mcp4725.MCP4725(i2c)
-  
+int adafruit(int x){
+ int dac;
+ dac.value = x;
+ return dac
+}
  
 void setup() {
   Serial.begin(9600);
