@@ -1,6 +1,14 @@
+<<<<<<< HEAD
 //===== Imports =====//
 #include <Wire.h>
 #include <Adafruit_MCP4725.h>
+=======
+import board
+import busio
+import adafruit_mcp4725
+
+// PSEU: Imports
+>>>>>>> 846bcf3281d650882ffc64993bf3565c8379ef0c
 
 //===== Pin Definitions =====//
 //---  Analog read ---//
@@ -61,7 +69,7 @@ void send_serial(char cmd) {
 
 void set_SMACurrent(float SMACurrent) {
   //--- Set SMACurrent with DAC intfc ---//
-  
+
   if (SMACurrent <= maxSMACurrent && SMACurrent >= 0) {
     int bitVoltage = (SMACurrent/lowV)*4095;
     dac.setVoltage(bitVoltage, false);
@@ -84,7 +92,7 @@ float get_SMACurrent() {
     Serial.print("get SMA Current: ");
     Serial.println(SMACurrent);
   }
-  
+
   return SMACurrent;
 }
 
@@ -96,14 +104,14 @@ float get_SMAVoltage() {
     Serial.print("get SMA Voltage: ");
     Serial.println(SMAVoltage);
   }
-  
+
   return SMAVoltage;
 }
 
 void set_fanSpeed(int fanSpeedPer) {
   //--- Set fan speed (percent) ---//
   // NOTE: Untested
-  
+
   int bitFanSpeed = min(max(fanSpeedPer,0),100) * 2.55; // 0-255
   analogWrite(fanWritePin, bitFanSpeed);
 
@@ -116,7 +124,7 @@ void set_fanSpeed(int fanSpeedPer) {
 int get_fanSpeed() {
   //--- Read fan speed (percent) ---//
   // NOTE: Untested
-  
+
   int bitFanSpeed = analogRead(fanReadPin);
   int fanSpeedPer = bitFanSpeed*100/1024;
   return fanSpeedPer;
@@ -140,7 +148,7 @@ void adj_delay(int del) {
 //===== Loop =====//
 void loop() {
 //  get_serialCmd();
-//  
+//
 //  set_SMACurrent(0.2);
 //  SMAVoltage = get_SMAVoltage();
 //
@@ -166,5 +174,5 @@ void loop() {
 
   // PSEU: Return data over serial
 
-  
+
 }
