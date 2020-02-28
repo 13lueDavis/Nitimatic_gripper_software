@@ -25,13 +25,54 @@ import time
 #
 #         return
 
+class SerialCommunication():
+    arduino = serial.Serial('COM1', 115200, timeout=.1)
 
-arduino = serial.Serial('COM1', 115200, timeout=.1)
+    def getGripperWidth():
+        arduino.write('W')
+        while True:
+            data = arduino.readline()
+            if data:
+                print(data)
+                break
+            
+    def getGripperHealth():
+        arduino.write('H')
+        while True:
+            data = arduino.readline()
+            if data:
+                print(data)
+                break
+            
+    def getSMAResistance():
+        arduino.write('R')
+        while True:
+            data = arduino.readline()
+            if data:
+                print(data)
+                break
+            
+    def getSMACurrent():
+        arduino.write('I')
+        while True:
+            data = arduino.readline()
+            if data:
+                print(data)
+                break
+            
+    def closeGripper():
+        arduino.write('C')
+        while True:
+            data = arduino.readline()
+            if data:
+                print(data)
+                break
 
-def openGripper():
-    arduino.write('>')
-    while True:
-        data = arduino.readline()
-        if data:
-            print(data)
-            break
+    def openGripper():
+        arduino.write('O')
+        while True:
+            data = arduino.readline()
+            if data:
+                print(data)
+                break
+            
