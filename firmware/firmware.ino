@@ -1,40 +1,16 @@
-<<<<<<< HEAD
 //===== Imports =====//
 #include <Wire.h>
 #include <Adafruit_MCP4725.h>
-=======
-import board
-import busio
-import adafruit_mcp4725
-
-// PSEU: Imports
->>>>>>> 846bcf3281d650882ffc64993bf3565c8379ef0c
-
-//===== Pin Definitions =====//
-//---  Analog read ---//
-#define SMACurrentReadPin A0
-#define SMAVoltageReadPin A1
-#define fanReadPin A2
-#define posSensorReadPin A3
-
-//--- Analog write ---//
-#define fanWritePin 6
+#include "RunningAverage.h"
 
 //===== Hardware Definitions =====//
 Adafruit_MCP4725 dac;
 
-//===== Constants =====//
-float highV = 30.0; // High voltage
-float lowV = 5.00;   // Low voltage
+#include "variables.h"
 
-float maxSMACurrent = 0.5;   // Maximum SMA current
-
-#define debug false
-
-//===== Variables =====//
-float SMACurrent;
-float SMAVoltage;
-float gripperWidth;
+String incomingString;
+char command;
+int payload;
 
 //===== Setup =====//
 void setup() {
@@ -42,137 +18,112 @@ void setup() {
 
   analogReference(EXTERNAL); // NEVER REMOVE THIS
 
-//  dac.begin(0x60);
-//  dac.setVoltage(0, false);
-
+  dac.begin(0x60);
+  delay(100);
+  dac.setVoltage(0, false);
+  
   // Phase-correct PWM of 31.250 kHz (prescale factor of 1)
-//  TCCR0A = _BV(COM0A1) | _BV(COM0B1) | _BV(WGM00);
-//  TCCR0B = _BV(CS00);
+//  TCCR1A = _BV(COM0A1) | _BV(COM0B1) | _BV(WGM00);
+//  TCCR1B = _BV(CS00);
 
-  set_fanSpeed(0);
+  set_fanSpeed(50);
 }
 
 //===== Functions =====//
 float check_serial() {
   if(Serial.available() > 0) {
-    char data = Serial.read();
-//    char str[2];
-//    str[0] = data;
-//    str[1] = '\0';
-    Serial.print(data);
-  }
-}
-
-void send_serial(char cmd) {
-  Serial.write(cmd);
-}
-
-void set_SMACurrent(float SMACurrent) {
-  //--- Set SMACurrent with DAC intfc ---//
-
-  if (SMACurrent <= maxSMACurrent && SMACurrent >= 0) {
-    int bitVoltage = (SMACurrent/lowV)*4095;
-    dac.setVoltage(bitVoltage, false);
-
-    if (debug) {
-      Serial.print("set SMA Current: ");
-      Serial.println(SMACurrent);
+    incomingString = Serial.readStringUntil('\r');
+    command = incomingString.charAt(0);
+    incomingString.remove(0,1);
+    payload = incomingString.toInt();
+    switch (command) {
+        case 'm':
+            set_calibrationM(float(payload)/1000);
+            break;
+        case 'b':
+            set_calibrationB(float(payload)/1000);
+            break;
+        case 't':
+            return_processorTime();
+            break;
+        case 'W':
+            return_gripperWidth();
+            break;
+        case 'w':
+            return_rawGripperWidth();
+            break;
+        case 'H':
+            return_wireHealth();
+            break;
+        case 'i':
+            set_targetCurrent(float(payload)/1000);
+            break;
+        case 'I':
+            return_SMACurrent();
+            break;
+        case 'V':
+            return_SMAVoltage();
+            break;
+        case 'R':
+            return_SMAResistance();
+            break;
+        case 'c':
+            break;
+        case 'o':
+            break;
+        case 'f':
+            set_fanSpeed(int(payload));
+            break;
+        case '+':
+            return_info();
+            break;
     }
   }
-  else {
-    Serial.println("Error, current out of range");
-  }
 }
 
-float get_SMACurrent() {
-  int bitCurrent = analogRead(SMACurrentReadPin);
-  float SMACurrent = bitCurrent*lowV/1024;
-
-  if (debug) {
-    Serial.print("get SMA Current: ");
+float return_SMACurrent() {
     Serial.println(SMACurrent);
-  }
-
-  return SMACurrent;
+    return SMACurrent;
 }
-
-float get_SMAVoltage() {
-  int bitVoltage = analogRead(SMAVoltageReadPin);
-  float SMAVoltage = 7.8*bitVoltage*lowV/1024;
-
-  if (debug) {
-    Serial.print("get SMA Voltage: ");
+float return_SMAVoltage() {
     Serial.println(SMAVoltage);
-  }
-
-  return SMAVoltage;
+    return SMAVoltage;
 }
-
-void set_fanSpeed(int fanSpeedPer) {
-  //--- Set fan speed (percent) ---//
-  // NOTE: Untested
-
-  int bitFanSpeed = min(max(fanSpeedPer,0),100) * 2.55; // 0-255
-  analogWrite(fanWritePin, bitFanSpeed);
-
-  if (debug) {
-    Serial.print("Fan: ");
-    Serial.println(fanSpeedPer);
-  }
+float return_SMAResistance() {
+    Serial.println(SMAResistance);
+    return SMAResistance;
 }
-
-int get_fanSpeed() {
-  //--- Read fan speed (percent) ---//
-  // NOTE: Untested
-
-  int bitFanSpeed = analogRead(fanReadPin);
-  int fanSpeedPer = bitFanSpeed*100/1024;
-  return fanSpeedPer;
+float return_gripperWidth() {
+    Serial.println("111");
+    return gripperWidth.getAverage();
 }
-
-int read_posSensor() {
-  float volts = analogRead(posSensorReadPin);
-  float distance = 27.726*pow(volts, -1.2045);
-  distance = min(max(distance,0),30);
-  return volts;
+int return_wireHealth() {
+    Serial.println(wireHealth);
+    return wireHealth;
 }
-
-void adj_delay(int del) {
-  delay(del*32);
-  delay(del*32);
-  delay(del*32);
-  delay(del*32);
-  delay(del*32);
+void return_info() {
+    Serial.print(SMACurrent);
+    Serial.print(',');
+    Serial.print(SMAVoltage);
+    Serial.print(',');
+    Serial.print(SMAResistance);
+    Serial.print(',');
+    Serial.print(gripperWidth.getAverage());
+    Serial.print(',');
+    Serial.print(wireHealth);
+    Serial.print(',');
+    Serial.println(millis());
 }
 
 //===== Loop =====//
 void loop() {
-//  get_serialCmd();
-//
-//  set_SMACurrent(0.2);
-//  SMAVoltage = get_SMAVoltage();
-//
-//  Serial.print("Resistance: ");
-//  Serial.println(SMAVoltage/0.2);
+    get_SMACurrent();
+    get_SMAVoltage();
+    get_SMAResistance();
+    get_gripperWidth();
 
-  long sum = 0;
-  for (int i=0; i<200; i++) {
-    sum += read_posSensor();
-    delay(18);
-  }
-  Serial.println(sum/200.);
-  // PSEU: Listen for serial commands
-  // PSEU: If command -> set setPoint
-
-  // PSEU: Read analog pins
-
-  // PSEU: Determine SMACurrent (via P-Loop)
-  // PSEU: Determine SMAResistance
-  // PSEU: Limit SMACurrent (based on SMAResistance
-
-  // PSEU: set_SMACurrent(SMACurrent)
-
-  // PSEU: Return data over serial
-
-
+    return_info();
+    
+    check_serial();
+    set_SMACurrent(targetCurrent);
 }

@@ -1,7 +1,9 @@
 import pygame
 import pygame.gfxdraw
 from utils import *
-from gripper import Gripper
+import sys
+sys.path.append('../')
+from gripper_v2 import Gripper
 
 class Style:
     def __init__(self):
@@ -186,11 +188,17 @@ class GUI:
         self.gui.blit(widthUnitSurf, widthUnitRect)
 
         healthVal = pygame.font.Font(self.style.secondaryFont, 16)
-        if health == "Good":
+        if health == 2:
+            health = "Good"
             clr = self.style.good
-        elif health == "Adequate":
+        elif health == 1:
+            health = "Adequate"
             clr = self.style.adequate
+        elif health == 0:
+            health = "Bad"
+            clr = self.style.bad
         else:
+            health = "???"
             clr = self.style.bad
         healthValSurf, healthValRect = text_objects(health, healthVal, clr)
         healthValRect.bottomleft = (self.healthLabelRect.right+5,self.healthLabelRect.bottom)
@@ -225,7 +233,10 @@ class GUI:
             self.state.draggingFanSpeed = True
         self.render()
 
-gripper = Gripper()
+try:
+    gripper = Gripper('/dev/cu.usbserial-1420')
+except:
+    gripper = Gripper()
 
 pygame.init()
 NitimaticGui = GUI();
